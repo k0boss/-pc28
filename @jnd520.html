@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>加拿大算法@jnd520</title>
+    <style>
+        /* 来自TG@jnd520 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            background-color: #f2f2f7;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 0 12px;
+        }
+        .container {
+            max-width: 680px;
+            width: 100%;
+            margin: 20px 0 30px;
+        }
+        .prediction-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 24px 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+            border: 0.5px solid rgba(0,0,0,0.1);
+        }
+        .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .prediction-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #6c6c70;
+            letter-spacing: 0.5px;
+        }
+        .current-period {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1c1c1e;
+            background: #f2f2f7;
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: 0.5px solid rgba(0,0,0,0.1);
+        }
+        .reference-period {
+            font-size: 14px;
+            color: #8e8e93;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 0.5px dashed #d9d9e0;
+        }
+        .recommend-numbers {
+            font-size: 31px;
+            font-weight: 700;
+            color: #1c1c1e;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            word-break: break-word;
+        }
+        .prediction-type {
+            font-size: 32px;
+            font-weight: 600;
+            color: #000000;
+            border-bottom: 1px solid #d9d9e0;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+        .pair-type {
+            font-size: 22px;
+            color: #3a3a3c;
+            font-weight: 400;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 22px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+            padding: 8px;
+            margin-bottom: 24px;
+            border: 0.5px solid rgba(0,0,0,0.1);
+        }
+        .table-container {
+            max-height: 480px;
+            overflow-y: auto;
+            border-radius: 18px;
+            background: #ffffff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: white;
+            border-radius: 18px;
+            overflow: hidden;
+        }
+        th {
+            background: #e9e9ed;
+            color: #000000;
+            font-weight: 500;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 12px 4px;
+            border-bottom: 1px solid #b9b9bc;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        td {
+            padding: 12px 4px;
+            text-align: center;
+            border-bottom: 1px solid #d9d9e0;
+            color: #1c1c1e;
+            font-weight: 450;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .period-cell {
+            font-weight: 500;
+            color: #3a3a3c;
+            font-size: 13px;
+        }
+        .latest-row {
+            background-color: #f0f0f5;
+            border-left: 4px solid #1c1c1e;
+        }
+        .latest-row td:first-child {
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+        }
+        .result-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #f2f2f7;
+            color: #1c1c1e;
+            border: 0.5px solid rgba(0,0,0,0.1);
+        }
+        .result-badge.zhongzu {
+            background: #2c2c2e;
+            color: #ffffff;
+        }
+        .result-badge.zhongshuangzu {
+            background: #636366;
+            color: #ffffff;
+        }
+        .result-badge.weizhong {
+            background: #d1d1d6;
+            color: #1c1c1e;
+        }
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .stat-item {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 18px;
+            padding: 16px 0;
+            flex: 1;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            border: 0.5px solid rgba(0,0,0,0.1);
+        }
+        .stat-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1c1c1e;
+            line-height: 1.2;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6c6c70;
+            margin-top: 4px;
+        }
+        .accuracy-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 18px;
+            padding: 16px 0;
+            text-align: center;
+            border: 0.5px solid rgba(0,0,0,0.1);
+            margin-top: 12px;
+        }
+        .accuracy-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1c1c1e;
+            line-height: 1.2;
+        }
+        .accuracy-label {
+            font-size: 14px;
+            color: #6c6c70;
+            margin-top: 4px;
+        }
+        .loading, .error {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c6c70;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 顶部预测卡片 (下一期) -->
+    <div class="prediction-card" id="predictionCard">
+        <div class="prediction-header">
+            <span class="prediction-label">下期预测 来自TG@jnd520</span>
+            <span class="current-period" id="currentPeriod">第--期</span>
+        </div>
+        <div class="recommend-numbers" id="recommendNumbers">--</div>
+        <div class="prediction-type" id="predictionType">--</div>
+        <div class="pair-type" id="pairType">(--)</div>
+        <div class="reference-period" id="referencePeriod">基于同y值期: --</div>
+    </div>
+
+    <!-- 历史卡片 (最近15期预测) -->
+    <div class="card">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>期号</th>
+                        <th>号码</th>
+                        <th>预测</th>
+                        <th>双组</th>
+                        <th>结果</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                    <tr><td colspan="5" class="loading">⏳ 加载中…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 底部统计 (15期) -->
+    <div class="stats-row" id="statsRow">
+        <div class="stat-item">
+            <div class="stat-value" id="totalCount">--</div>
+            <div class="stat-label">总期数(15)</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="hitCount">--</div>
+            <div class="stat-label">命中(15)</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="hitRate">--%</div>
+            <div class="stat-label">命中率(15)</div>
+        </div>
+    </div>
+
+    <!-- 近50期正确率 -->
+    <div class="accuracy-card" id="accuracy50Card">
+        <div class="accuracy-value" id="accuracy50">--%</div>
+        <div class="accuracy-label">近50期正确率</div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // ----- 工具函数 -----
+    const getTypeByValue = (v) => {
+        if (v < 0 || v > 27) return '未知';
+        if (v <= 13) return (v % 2 === 1) ? '小单' : '小双';
+        else return (v % 2 === 1) ? '大单' : '大双';
+    };
+
+    const opposite = { '小单':'大双', '小双':'大单', '大单':'小双', '大双':'小单' };
+
+    function getPredAndPairFromKill(killType) {
+        if (!killType) return { pred: '--', pair: '--' };
+        const pred = opposite[killType];
+        let pair = '';
+        if (killType === '大双' || killType === '小单') {
+            pair = '大单小双';   // 杀大双/小单 → 剩下 大单小双
+        } else {
+            pair = '大双小单';   // 杀大单/小双 → 剩下 大双小单
+        }
+        return { pred, pair };
+    }
+
+    // 计算数字各位和 (处理前导零)
+    function sumOfDigits(num) {
+        const s = num.toString().padStart(3, '0');
+        return parseInt(s[0]) + parseInt(s[1]) + parseInt(s[2]);
+    }
+
+    // 判断y值分组 (0,1,2)
+    function getY(sum) {
+        return sum % 3;
+    }
+
+    // 从历史数据中寻找与给定期相同y值的最近两期 (不包括当期本身)
+    function findSameYPeriods(latestIdx, data) {
+        const targetY = getY(parseInt(data[latestIdx].num));
+        const candidates = [];
+        for (let i = latestIdx - 1; i >= 0; i--) {
+            if (getY(parseInt(data[i].num)) === targetY) {
+                candidates.push(data[i]);
+                if (candidates.length === 2) break;
+            }
+        }
+        return candidates; // 可能不足2个
+    }
+
+    // 核心预测函数：给定最新一期索引（作为基准），返回预测下一期的结果对象
+    function predictNext(latestIdx, allData) {
+        const cur = allData[latestIdx];          // 最新一期（已开奖）
+        const A = parseInt(cur.num);              // 和值
+        const digits = cur.number.split('+').map(Number);
+        const [a, b, c] = digits;
+
+        // 查找相同y值的历史两期
+        const sameY = findSameYPeriods(latestIdx, allData);
+        if (sameY.length < 2) {
+            return null; // 历史不足两期同y，无法预测
+        }
+        const pB = sameY[0]; // 最近的一期
+        const pC = sameY[1]; // 次近的一期
+        const B = parseInt(pB.num);
+        const C = parseInt(pC.num);
+
+        // 计算R
+        const R = A + B + C;
+
+        // 计算F (三位数，可能小于100)
+        const F = a * 100 + b * 10 + c;
+
+        // 使用BigInt进行大数乘法
+        const bigR = BigInt(R);
+        const bigF = BigInt(F);
+        const bigA = BigInt(a);
+        const bigB = BigInt(b);
+        const bigC = BigInt(c);
+        const big27 = 27n;
+        const big28_4 = 28n ** 4n; // 28^4
+
+        let product = (bigR + bigF) * bigA * bigB * bigC * big27 * big28_4;
+        let str = product.toString();
+        // 取后12位，不足则补0（理论上不会）
+        let last12 = str.slice(-12);
+        if (last12.length < 12) last12 = last12.padStart(12, '0');
+
+        const p1 = last12.slice(0, 3);
+        const p2 = last12.slice(3, 6);
+        const p3 = last12.slice(6, 9);
+        const p4 = last12.slice(9, 12);
+
+        const d1 = parseInt(p4[0]);
+        const d2 = parseInt(p4[1]);
+        const d3 = parseInt(p4[2]);
+
+        // 构造新数
+        const new1 = d1 * 100 + parseInt(p1.slice(1, 3)); // 百位替换为d1，十位个位不变
+        const new2 = parseInt(p2[0]) * 100 + d2 * 10 + parseInt(p2[2]); // 十位替换为d2
+        const new3 = parseInt(p3[0]) * 100 + parseInt(p3[1]) * 10 + d3; // 个位替换为d3
+
+        const ball1 = sumOfDigits(new1);
+        const ball2 = sumOfDigits(new2);
+        const ball3 = sumOfDigits(new3);
+
+        const type1 = getTypeByValue(ball1);
+        const type2 = getTypeByValue(ball2);
+        const type3 = getTypeByValue(ball3);
+
+        const ballTypes = [type1, type2, type3];
+        const ballValues = [ball1, ball2, ball3];
+
+        // 获取近三期实际开奖组合 (latestIdx-1, latestIdx-2, latestIdx-3)
+        const recentTypes = [];
+        for (let i = 1; i <= 3; i++) {
+            if (latestIdx - i >= 0) {
+                recentTypes.push(allData[latestIdx - i].combination);
+            }
+        }
+        // 如果不足三期，用已有的，但算法假设至少有三期历史
+
+        // 统计ballTypes分布
+        const count = {};
+        ballTypes.forEach(t => count[t] = (count[t] || 0) + 1);
+        const unique = Object.keys(count).length;
+
+        let killType = null;
+
+        if (unique === 3) {
+            // 三个各不相同
+            if (recentTypes.includes('小单')) {
+                killType = '大双';
+            } else {
+                killType = '小单';
+            }
+        } else if (unique === 1) {
+            // 三个完全相同
+            const sameType = ballTypes[0];
+            if (recentTypes.includes(sameType)) {
+                killType = opposite[sameType];
+            } else {
+                killType = sameType;
+            }
+        } else {
+            // 两个相同，一个不同
+            let majority, minority;
+            for (let [t, cnt] of Object.entries(count)) {
+                if (cnt === 2) majority = t;
+                else minority = t;
+            }
+            if (recentTypes.includes('大双')) {
+                killType = minority;
+            } else {
+                killType = '大双';
+            }
+        }
+
+        const { pred, pair } = getPredAndPairFromKill(killType);
+
+        // 生成推荐特码 (四个号码)
+        const recommend = generateRecommendNumbers(ballValues, ballTypes, pair, [d1, d2, d3]);
+
+        return {
+            nextPeriod: (parseInt(cur.nbr) + 1).toString(), // 下一期期号
+            pred,
+            pair,
+            recommend,
+            refPeriods: `${pB.nbr} ${pC.nbr}`, // 参考的两期
+            kill: killType,
+            ballValues,
+            ballTypes,
+            p4: [d1, d2, d3]
+        };
+    }
+
+    // 生成推荐特码
+    function generateRecommendNumbers(ballVals, ballTypes, pair, tailPrefs) {
+        const typeNumbers = {
+            '小单': [1,3,5,7,9,11,13].map(n => n.toString().padStart(2,'0')),
+            '小双': [0,2,4,6,8,10,12].map(n => n.toString().padStart(2,'0')),
+            '大单': [15,17,19,21,23,25,27].map(n => n.toString().padStart(2,'0')),
+            '大双': [14,16,18,20,22,24,26].map(n => n.toString().padStart(2,'0'))
+        };
+
+        let typeA, typeB;
+        if (pair === '大单小双') {
+            typeA = '大单';
+            typeB = '小双';
+        } else if (pair === '大双小单') {
+            typeA = '大双';
+            typeB = '小单';
+        } else {
+            return '--';
+        }
+
+        // 从ball中选出属于typeA或typeB的号码
+        let selected = [];
+        for (let i = 0; i < ballVals.length; i++) {
+            const val = ballVals[i];
+            const type = ballTypes[i];
+            if (type === typeA || type === typeB) {
+                const numStr = val.toString().padStart(2, '0');
+                if (!selected.includes(numStr)) {
+                    selected.push(numStr);
+                }
+            }
+        }
+
+        // 按类型统计已选数量
+        let countA = selected.filter(num => getTypeByValue(parseInt(num)) === typeA).length;
+        let countB = selected.filter(num => getTypeByValue(parseInt(num)) === typeB).length;
+
+        // 如果某类型超过2个，只保留最小的两个
+        if (countA > 2) {
+            const aNums = selected.filter(num => getTypeByValue(parseInt(num)) === typeA)
+                                .sort((a,b) => parseInt(a) - parseInt(b));
+            const keepA = aNums.slice(0,2);
+            selected = selected.filter(num => getTypeByValue(parseInt(num)) !== typeA).concat(keepA);
+            countA = 2;
+        }
+        if (countB > 2) {
+            const bNums = selected.filter(num => getTypeByValue(parseInt(num)) === typeB)
+                                .sort((a,b) => parseInt(a) - parseInt(b));
+            const keepB = bNums.slice(0,2);
+            selected = selected.filter(num => getTypeByValue(parseInt(num)) !== typeB).concat(keepB);
+            countB = 2;
+        }
+
+        const needA = 2 - countA;
+        const needB = 2 - countB;
+        const tailSet = new Set(tailPrefs); // 尾数偏好
+
+        function pickFromType(type, need) {
+            if (need <= 0) return [];
+            const allNums = typeNumbers[type] || [];
+            const available = allNums.filter(num => !selected.includes(num));
+            // 按尾数偏好排序：先匹配偏好尾数，再其他，同尾数内从小到大
+            const matched = available.filter(num => tailSet.has(parseInt(num[1]))); // 个位
+            const unmatched = available.filter(num => !tailSet.has(parseInt(num[1])));
+            const sorted = [
+                ...matched.sort((a,b) => parseInt(a) - parseInt(b)),
+                ...unmatched.sort((a,b) => parseInt(a) - parseInt(b))
+            ];
+            return sorted.slice(0, need);
+        }
+
+        const newA = pickFromType(typeA, needA);
+        const newB = pickFromType(typeB, needB);
+        const all = [...selected, ...newA, ...newB];
+        const unique = [...new Set(all)];
+        const sorted = unique.sort((a,b) => parseInt(a) - parseInt(b));
+        return sorted.join(' / ') || '--';
+    }
+
+    // 结果样式类
+    function getResultClass(result) {
+        if (result === '中 组') return 'zhongzu';
+        if (result === '中双组') return 'zhongshuangzu';
+        if (result === '未中') return 'weizhong';
+        return '';
+    }
+
+    // 主流程
+    (async () => {
+        const API_URL = 'https://pc28.ai/api/kj.json?nbr=53';
+        let data = [];
+        try {
+            const resp = await fetch(API_URL);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const json = await resp.json();
+            if (!json.data || json.data.length === 0) throw new Error('暂无数据');
+            data = json.data;
+            data.sort((a, b) => parseInt(a.nbr) - parseInt(b.nbr));
+        } catch (e) {
+            document.getElementById('historyBody').innerHTML = `<tr><td colspan="5" class="error">❌ 加载失败: ${e.message}</td></tr>`;
+            document.getElementById('totalCount').innerText = '0';
+            document.getElementById('hitCount').innerText = '0';
+            document.getElementById('hitRate').innerText = '0%';
+            document.getElementById('accuracy50').innerText = '0%';
+            return;
+        }
+
+        if (data.length < 5) { // 至少需要5期才能预测最早一期
+            document.getElementById('historyBody').innerHTML = `<tr><td colspan="5" class="error">至少需要5期数据，当前${data.length}期</td></tr>`;
+            return;
+        }
+
+        // 计算所有历史预测（从第4期开始，因为需要前三期作历史）
+        const results = [];
+        for (let i = 3; i < data.length; i++) {
+            // 预测第i期 (data[i])，基于 data[i-1] 作为最新一期
+            const predObj = predictNext(i-1, data);
+            if (!predObj) {
+                // 如果找不到同y值两期，跳过这一期（实际很少发生）
+                continue;
+            }
+            const actual = data[i].combination;
+            let result = '';
+            if (actual === predObj.kill) result = '未中';
+            else if (actual === predObj.pred) result = '中 组';
+            else if (predObj.pair.includes(actual)) result = '中双组';
+            else result = '未中';
+
+            results.push({
+                qihao: data[i].nbr,
+                numDisplay: `${data[i].number}=${data[i].num}`,
+                pred: predObj.pred,
+                pair: predObj.pair,
+                result: result,
+                // 保存参考期号用于显示（可选）
+                refPeriods: predObj.refPeriods
+            });
+        }
+
+        if (results.length === 0) {
+            document.getElementById('historyBody').innerHTML = '<tr><td colspan="5" class="error">无法生成预测记录</td></tr>';
+            return;
+        }
+
+        // 顶部：预测下一期（基于最新一期）
+        const latestIdx = data.length - 1;
+        const nextPred = predictNext(latestIdx, data);
+        if (!nextPred) {
+            document.getElementById('predictionType').innerText = '数据不足';
+            document.getElementById('pairType').innerText = '(--)';
+            document.getElementById('recommendNumbers').innerText = '--';
+        } else {
+            document.getElementById('currentPeriod').innerText = `第${nextPred.nextPeriod}期`;
+            document.getElementById('referencePeriod').innerText = `基于同y值期: ${nextPred.refPeriods}`;
+            document.getElementById('predictionType').innerText = nextPred.pred;
+            document.getElementById('pairType').innerText = `(${nextPred.pair})`;
+            document.getElementById('recommendNumbers').innerText = nextPred.recommend;
+        }
+
+        // 填充历史表格（最近15条倒序）
+        const latest15 = results.slice(-15).reverse();
+        const latestQihao = latest15.length > 0 ? latest15[0].qihao : null;
+        let html = '';
+        latest15.forEach(item => {
+            const resultClass = getResultClass(item.result);
+            const rowClass = (item.qihao === latestQihao) ? 'latest-row' : '';
+            html += `<tr class="${rowClass}">
+                <td class="period-cell">${item.qihao}</td>
+                <td>${item.numDisplay}</td>
+                <td>${item.pred}</td>
+                <td>${item.pair}</td>
+                <td><span class="result-badge ${resultClass}">${item.result}</span></td>
+            </tr>`;
+        });
+        document.getElementById('historyBody').innerHTML = html || '<tr><td colspan="5" class="error">暂无记录</td></tr>';
+
+        // 统计15期
+        const total15 = latest15.length;
+        const hit15 = latest15.filter(item => item.result === '中 组' || item.result === '中双组').length;
+        const rate15 = total15 > 0 ? ((hit15 / total15) * 100).toFixed(1) : '0.0';
+        document.getElementById('totalCount').innerText = total15;
+        document.getElementById('hitCount').innerText = hit15;
+        document.getElementById('hitRate').innerText = rate15 + '%';
+
+        // 统计最近50期正确率
+        const latest50 = results.slice(-50);
+        const total50 = latest50.length;
+        const hit50 = latest50.filter(item => item.result === '中 组' || item.result === '中双组').length;
+        const rate50 = total50 > 0 ? ((hit50 / total50) * 100).toFixed(1) : '0.0';
+        document.getElementById('accuracy50').innerText = rate50 + '%';
+    })();
+})();
+</script>
+</body>
+</html>
